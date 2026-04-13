@@ -126,12 +126,15 @@ function CameraModal({ onClose, onAdd }: {
     const video  = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Resize to max 800px to reduce payload size
+    const MAX = 800;
+    const scale = Math.min(1, MAX / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width  = Math.round(video.videoWidth  * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
     setCapturedImg(dataUrl);
     streamRef.current?.getTracks().forEach(t => t.stop());
     setMode('preview');
@@ -142,9 +145,30 @@ function CameraModal({ onClose, onAdd }: {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      setCapturedImg(ev.target?.result as string);
-      streamRef.current?.getTracks().forEach(t => t.stop());
-      setMode('preview');
+      const dataUrl = ev.target?.result as string;
+      // Resize uploaded image too
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          setCapturedImg(canvas.toDataURL('image/jpeg', 0.75));
+        } else {
+          setCapturedImg(dataUrl);
+        }
+        streamRef.current?.getTracks().forEach(t => t.stop());
+        setMode('preview');
+      };
+      img.onerror = () => {
+        setCapturedImg(dataUrl);
+        setMode('preview');
+      };
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
   }
@@ -153,9 +177,8 @@ function CameraModal({ onClose, onAdd }: {
     if (!capturedImg) return;
     setLoading(true); setError('');
     try {
-      // Strip data URL header → pure base64
-      const base64 = capturedImg.split(',')[1];
-      const mimeType = capturedImg.split(';')[0].split(':')[1] || 'image/jpeg';
+      const base64  = capturedImg.split(',')[1];
+      const mimeType = 'image/jpeg'; // always jpeg after canvas compression
 
       const res = await fetch('/api/analyze-photo', {
         method: 'POST',
@@ -168,7 +191,10 @@ function CameraModal({ onClose, onAdd }: {
       setEditUnit(data.result.unit);
       setMode('result');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Analisis gagal. Coba foto lebih dekat dan pastikan makanan terlihat jelas.');
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg.includes('503') || msg.includes('overloaded')
+        ? 'Server AI sedang sibuk. Tunggu beberapa detik lalu klik "Analisis Nutrisi" lagi.'
+        : msg.length > 200 ? 'Analisis gagal. Pastikan foto makanan terlihat jelas dan coba lagi.' : msg);
     }
     setLoading(false);
   }
@@ -249,15 +275,30 @@ function CameraModal({ onClose, onAdd }: {
                 <img src={capturedImg} alt="captured" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
               {error && (
-                <div style={{ padding: '10px 14px', background: 'rgba(255,92,92,0.08)', border: '1px solid rgba(255,92,92,0.25)', borderRadius: 10, fontSize: 13, color: 'var(--red)', marginBottom: 14 }}>
+                <div style={{ padding: '12px 14px', background: 'rgba(255,92,92,0.08)', border: '1px solid rgba(255,92,92,0.25)', borderRadius: 10, fontSize: 13, color: 'var(--red)', marginBottom: 14, lineHeight: 1.6 }}>
                   ⚠️ {error}
+                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text3)' }}>
+                    Tip: pastikan makanan terlihat jelas, pencahayaan cukup, dan tidak blur.
+                  </div>
+                </div>
+              )}
+              {/* Loading state */}
+              {loading && (
+                <div style={{ textAlign: 'center', padding: '12px 0', marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600 }}>
+                    🤖 AI sedang menganalisis foto...
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
+                    Mencoba beberapa model AI, harap tunggu sebentar
+                  </div>
                 </div>
               )}
               <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={analyzePhoto} disabled={loading}>
-                  {loading ? '⏳ Menganalisis...' : '✨ Analisis Nutrisi'}
+                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={analyzePhoto} disabled={loading}>
+                  {loading ? '⏳ Menganalisis...' : (error ? '🔄 Coba Lagi' : '✨ Analisis Nutrisi')}
                 </button>
-                <button className="btn btn-ghost" onClick={retake}>🔄 Foto Ulang</button>
+                <button className="btn btn-ghost" onClick={retake} disabled={loading}>📷 Foto Ulang</button>
               </div>
             </>
           )}
@@ -320,7 +361,14 @@ function AIFoodModal({ onClose, onAdd }: {
       setEditUnit(data.result.unit);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(`Gagal menganalisis: ${msg}. Coba lagi atau gunakan fitur foto.`);
+      // Show user-friendly message
+      if (msg.includes('503') || msg.includes('overloaded') || msg.includes('Semua model')) {
+        setError('Server AI sedang sibuk. Klik "Coba Lagi" dalam beberapa detik.');
+      } else if (msg.includes('non-JSON') || msg.includes('parse')) {
+        setError('AI memberikan respons tidak valid. Klik "Coba Lagi" — biasanya berhasil pada percobaan kedua.');
+      } else {
+        setError(`Gagal: ${msg.slice(0, 120)}`);
+      }
     }
     setLoading(false);
   }

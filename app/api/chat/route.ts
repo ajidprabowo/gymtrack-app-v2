@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const MODEL = 'gemini-3-flash-preview';
+const MODELS = [
+  'gemini-3-flash-preview',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash'
+];
 
 export async function POST(req: NextRequest) {
   const { messages, profile } = await req.json();
@@ -37,32 +41,41 @@ Jika pertanyaan tidak berkaitan dengan gym/fitness, arahkan kembali ke topik gym
     parts: [{ text: msg.content }],
   }));
 
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents,
-          generationConfig: { maxOutputTokens: 1024, temperature: 0.8 },
-        }),
+  for (const model of MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents,
+            generationConfig: { maxOutputTokens: 1024, temperature: 0.8 },
+          }),
+        }
+      );
+
+      if (res.status === 503 || res.status === 429) {
+        await new Promise(r => setTimeout(r, 500));
+        continue;
       }
-    );
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('Gemini chat error:', res.status, errText);
-      return NextResponse.json({ text: `Error Gemini API (${res.status}). Pastikan API key valid.` }, { status: 200 });
+      if (!res.ok) {
+        const err = await res.text();
+        console.error(`Chat ${model} error:`, res.status, err);
+        continue;
+      }
+
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) continue;
+      return NextResponse.json({ text });
+
+    } catch (err) {
+      console.error(`Chat ${model} exception:`, err);
     }
-
-    const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) return NextResponse.json({ text: 'Maaf, tidak ada respons dari AI. Coba lagi ya! 💪' });
-    return NextResponse.json({ text });
-  } catch (err) {
-    console.error('Chat exception:', err);
-    return NextResponse.json({ text: 'Koneksi ke AI gagal. Periksa internet dan coba lagi.' }, { status: 200 });
   }
+
+  return NextResponse.json({ text: 'AI sedang sibuk. Coba lagi dalam beberapa detik ya! 💪' }, { status: 200 });
 }

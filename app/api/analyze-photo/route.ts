@@ -1,13 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const MODEL = 'gemini-3-flash-preview';
+const MODELS = [
+  'gemini-3-flash-preview',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b',
+];
 
 function extractJSON(text: string): Record<string, unknown> | null {
-  const stripped = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-  try { return JSON.parse(stripped); } catch {}
-  const m = stripped.match(/\{[\s\S]*?\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch {} }
+  if (!text) return null;
+  let cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  try { return JSON.parse(cleaned); } catch {}
+  const start = cleaned.indexOf('{');
+  const end   = cleaned.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch {}
+  }
   return null;
+}
+
+async function callGeminiVision(apiKey: string, model: string, imageBase64: string, mimeType: string) {
+  const prompt = `You are a nutrition expert. Look at this food photo carefully and identify all food items visible.
+
+Return ONLY this JSON object, no other text whatsoever:
+{"name":"food name in Indonesian","unit":"portion unit in Indonesian (1 porsi, 1 piring, 1 gelas, etc)","caloriesPer":NUMBER,"proteinPer":NUMBER,"carbsPer":NUMBER,"fatPer":NUMBER,"description":"brief Indonesian description of what you see"}
+
+Numbers must be numeric. Estimate nutrition for the visible portion size. No markdown, no explanation. Just JSON.`;
+
+  return fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          role: 'user',
+          parts: [
+            { inlineData: { mimeType, data: imageBase64 } },
+            { text: prompt },
+          ],
+        }],
+        generationConfig: { maxOutputTokens: 300, temperature: 0.1 },
+      }),
+    }
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -16,53 +51,58 @@ export async function POST(req: NextRequest) {
   if (!apiKey) return NextResponse.json({ error: 'GEMINI_API_KEY not set' }, { status: 500 });
   if (!imageBase64) return NextResponse.json({ error: 'Gambar tidak ada' }, { status: 400 });
 
-  const prompt = `Kamu adalah ahli nutrisi makanan. Lihat gambar makanan/minuman ini dengan cermat.
+  const imgMime = mimeType || 'image/jpeg';
+  let lastError = '';
 
-Identifikasi semua makanan/minuman yang terlihat dan estimasi kandungan nutrisinya untuk 1 porsi standar yang terlihat dalam foto.
+  for (const model of MODELS) {
+    try {
+      const res = await callGeminiVision(apiKey, model, imageBase64, imgMime);
+      const raw = await res.json();
 
-Balas HANYA dengan JSON ini, tanpa teks lain apapun:
-{"name":"<nama makanan yang terlihat di foto>","unit":"<satuan porsi (1 porsi, 1 piring, 1 gelas, dll)>","caloriesPer":<angka kalori>,"proteinPer":<angka protein gram>,"carbsPer":<angka karbo gram>,"fatPer":<angka lemak gram>,"description":"<deskripsi singkat makanan yang terlihat>"}`;
-
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            role: 'user',
-            parts: [
-              { inlineData: { mimeType: mimeType || 'image/jpeg', data: imageBase64 } },
-              { text: prompt },
-            ],
-          }],
-          generationConfig: { maxOutputTokens: 400, temperature: 0.2 },
-        }),
+      if (res.status === 503 || res.status === 429) {
+        lastError = `Model ${model} overloaded (${res.status})`;
+        console.warn(lastError);
+        await new Promise(r => setTimeout(r, 800));
+        continue;
       }
-    );
 
-    const raw = await res.json();
-    if (!res.ok) {
-      console.error('Gemini photo error:', raw);
-      return NextResponse.json({ error: `Gemini ${res.status}: ${JSON.stringify(raw?.error?.message || raw)}` }, { status: 500 });
+      if (!res.ok) {
+        lastError = `Model ${model} error ${res.status}: ${JSON.stringify(raw?.error?.message || raw)}`;
+        console.error(lastError);
+        continue;
+      }
+
+      const text = raw?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      console.log(`[analyze-photo] model=${model} raw:`, text.slice(0, 200));
+
+      const parsed = extractJSON(text);
+      if (!parsed) {
+        lastError = `Non-JSON response: "${text.slice(0, 150)}"`;
+        console.error(lastError);
+        continue;
+      }
+
+      const required = ['name', 'unit', 'caloriesPer', 'proteinPer', 'carbsPer', 'fatPer'];
+      const missing  = required.filter(k => parsed[k] === undefined || parsed[k] === null);
+      if (missing.length > 0) {
+        lastError = `Missing fields: ${missing.join(', ')}`;
+        continue;
+      }
+
+      for (const k of ['caloriesPer', 'proteinPer', 'carbsPer', 'fatPer']) {
+        parsed[k] = Math.max(0, parseFloat(String(parsed[k])) || 0);
+      }
+
+      return NextResponse.json({ result: parsed });
+
+    } catch (err) {
+      lastError = `Exception: ${String(err)}`;
+      console.error(`[analyze-photo] ${model}:`, err);
     }
-
-    const text = raw?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const parsed = extractJSON(text);
-
-    if (!parsed) {
-      console.error('Cannot parse photo JSON from:', text);
-      return NextResponse.json({ error: `Tidak bisa mengidentifikasi makanan dalam foto. Coba foto lebih dekat dan terang.` }, { status: 500 });
-    }
-
-    for (const k of ['caloriesPer','proteinPer','carbsPer','fatPer']) {
-      parsed[k] = Math.max(0, parseFloat(String(parsed[k])) || 0);
-    }
-
-    return NextResponse.json({ result: parsed });
-  } catch (err) {
-    console.error('analyze-photo exception:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
+
+  return NextResponse.json(
+    { error: `Analisis foto gagal. ${lastError}. Pastikan foto makanan terlihat jelas dan coba lagi.` },
+    { status: 500 }
+  );
 }
