@@ -4,6 +4,7 @@ import { storage } from '@/lib/storage';
 import { MealEntry, FoodItem, UserProfile } from '@/types';
 import { genId, todayStr } from '@/lib/utils';
 import AppShell from '@/components/AppShell';
+import { useLanguage } from '@/components/LanguageProvider';
 
 const MEAL_TYPES = [
   'Sarapan','Snack Pagi','Makan Siang',
@@ -453,6 +454,7 @@ function AIFoodModal({ onClose, onAdd }: {
 
 // ─── Main Page ────────────────────────────────────────────────────────────
 export default function NutritionPage() {
+  const { t } = useLanguage();
   const [profile,      setProfile]      = useState<UserProfile | null>(null);
   const [meals,        setMeals]        = useState<MealEntry[]>([]);
   const [foods,        setFoods]        = useState<FoodItem[]>([]);
@@ -568,8 +570,8 @@ export default function NutritionPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 className="page-title">Nutrisi</h1>
-            <p className="page-sub">Tracking kalori & makronutrien harian</p>
+            <h1 className="page-title">{t('nutrition.title')}</h1>
+            <p className="page-sub">{t('nutrition.target')} tracking</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button className="btn btn-ghost" onClick={() => setShowCalc(true)}>🔢 Kalkulator</button>
@@ -595,10 +597,10 @@ export default function NutritionPage() {
         {/* Macro cards */}
         <div className="grid-4" style={{ marginBottom: 16 }}>
           {[
-            { label: 'Kalori',  val: Math.round(dayTotals.calories), target: profile.targetCalories, unit: 'kkal', color: 'var(--yellow)' },
-            { label: 'Protein', val: Math.round(dayTotals.protein),  target: profile.targetProtein,  unit: 'g',    color: 'var(--green)' },
-            { label: 'Karbo',   val: Math.round(dayTotals.carbs),    target: targetCarbs,             unit: 'g',    color: 'var(--accent)' },
-            { label: 'Lemak',   val: Math.round(dayTotals.fat),      target: targetFat,               unit: 'g',    color: 'var(--orange)' },
+            { label: t('nutrition.cal'),  val: Math.round(dayTotals.calories), target: profile.targetCalories, unit: 'kkal', color: 'var(--yellow)' },
+            { label: t('nutrition.pro'), val: Math.round(dayTotals.protein),  target: profile.targetProtein,  unit: 'g',    color: 'var(--green)' },
+            { label: t('nutrition.title') === 'Nutrisi' ? 'Karbo' : 'Carbs',   val: Math.round(dayTotals.carbs),    target: targetCarbs,             unit: 'g',    color: 'var(--accent)' },
+            { label: t('nutrition.title') === 'Nutrisi' ? 'Lemak' : 'Fat',   val: Math.round(dayTotals.fat),      target: targetFat,               unit: 'g',    color: 'var(--orange)' },
           ].map(({ label, val, target, unit, color }) => (
             <div key={label} className="stat-card">
               <div className="stat-label">{label}</div>
@@ -615,12 +617,12 @@ export default function NutritionPage() {
 
         {/* Progress card */}
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-title">Ringkasan Hari Ini</div>
+          <div className="card-title">{t('common.today')}</div>
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ flex: 1, minWidth: 200 }}>
               {[
-                { label: 'Kalori',  val: dayTotals.calories, target: profile.targetCalories, unit: 'kkal', color: 'var(--yellow), var(--orange)' },
-                { label: 'Protein', val: dayTotals.protein,  target: profile.targetProtein,  unit: 'g',    color: 'var(--green), #00d2ff' },
+                { label: t('nutrition.cal'),  val: dayTotals.calories, target: profile.targetCalories, unit: 'kkal', color: 'var(--yellow), var(--orange)' },
+                { label: t('nutrition.pro'), val: dayTotals.protein,  target: profile.targetProtein,  unit: 'g',    color: 'var(--green), #00d2ff' },
               ].map(({ label, val, target, unit, color }) => (
                 <div key={label} style={{ marginBottom: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
@@ -681,8 +683,8 @@ export default function NutritionPage() {
         {dayMeals.length === 0 && (
           <div className="empty-state">
             <div className="empty-icon">🍽️</div>
-            <div className="empty-title">Belum ada catatan makan</div>
-            <div className="empty-sub">Catat makanan untuk tracking nutrisi</div>
+            <div className="empty-title">{t('nutrition.emptyMenu')}</div>
+            <div className="empty-sub">{t('nutrition.emptyMenu')}</div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
               <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Catat Makan</button>
               <button className="btn btn-ghost" style={{ color: 'var(--green)', borderColor: 'rgba(57,217,138,0.4)' }} onClick={() => setShowCamera(true)}>📷 Foto Makanan</button>
@@ -755,7 +757,7 @@ export default function NutritionPage() {
               </div>
             )}
             <div className="form-group">
-              <label className="form-label">Jumlah {selectedFood ? `(${selectedFood.unit})` : ''}</label>
+              <label className="form-label">{t('nutrition.modal.qty')} {selectedFood ? `(${selectedFood.unit})` : ''}</label>
               <input type="text" inputMode="decimal" className="input" value={newMeal.quantityStr} placeholder="0"
                 onChange={e => setNewMeal({ ...newMeal, quantityStr: e.target.value })} onFocus={e => e.target.select()} />
             </div>

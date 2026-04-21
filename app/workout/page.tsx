@@ -5,6 +5,7 @@ import { WorkoutSession, Exercise, GymSet, MuscleGroup, UserProfile } from '@/ty
 import { genId, formatDuration, getBadgeClass } from '@/lib/utils';
 import { MUSCLE_GROUPS, EXERCISE_PRESETS, WORKOUT_PRESETS } from '@/data/exercises';
 import AppShell from '@/components/AppShell';
+import { useLanguage } from '@/components/LanguageProvider';
 
 const TYPES = ['Push', 'Pull', 'Leg', 'Full Body', 'Custom'] as const;
 
@@ -45,6 +46,7 @@ function toSave(session: SessionDisplay): WorkoutSession {
 }
 
 export default function WorkoutPage() {
+  const { t } = useLanguage();
   const [sessions, setSessions]   = useState<WorkoutSession[]>([]);
   const [active, setActive]       = useState<SessionDisplay | null>(null);
   const [showAddEx, setShowAddEx] = useState(false);
@@ -249,7 +251,7 @@ export default function WorkoutPage() {
   }
 
   function cancelWorkout() {
-    if (window.confirm('Batalkan workout ini?')) {
+    if (window.confirm(t('workout.active.cancelMsg'))) {
       setActive(null);
       resetTimer();
     }
@@ -271,8 +273,8 @@ export default function WorkoutPage() {
     return (
       <AppShell>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
-          <h1 className="page-title">Mulai Workout</h1>
-          <p className="page-sub">Pilih tipe workout hari ini</p>
+          <h1 className="page-title">{t('workout.startTitle')}</h1>
+          <p className="page-sub">{t('workout.startSub')}</p>
           <div className="grid-2" style={{ marginBottom: 24 }}>
             {TYPES.map(type => (
               <button key={type} onClick={() => startWorkout(type)}
@@ -282,20 +284,27 @@ export default function WorkoutPage() {
                 <span className={`badge badge-${type.toLowerCase().replace(' ', '-')}`} style={{ marginBottom: 8, display: 'block', width: 'fit-content' }}>{type}</span>
                 <div style={{ fontFamily: 'var(--font-montserrat,Montserrat,sans-serif)', fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{type} Day</div>
                 <div style={{ fontSize: 12, color: 'var(--text2)' }}>
-                  {type === 'Push' && 'Chest · Shoulder · Triceps'}
-                  {type === 'Pull' && 'Back · Biceps · Rear Delt'}
-                  {type === 'Leg' && 'Quads · Hamstring · Calves'}
-                  {type === 'Full Body' && 'Semua grup otot dalam 1 sesi'}
-                  {type === 'Custom' && 'Buat workout sesuai keinginan'}
+                  {type === 'Push' && t('workout.types.push')}
+                  {type === 'Pull' && t('workout.types.pull')}
+                  {type === 'Leg' && t('workout.types.leg')}
+                  {type === 'Full Body' && t('workout.types.full')}
+                  {type === 'Custom' && t('workout.types.custom')}
                 </div>
               </button>
             ))}
           </div>
           <div className="card">
-            <div className="card-title">Tips Sebelum Latihan</div>
-            {['💧 Minum 1-2 gelas air sebelum mulai', '🔥 Warm up 5-10 menit sebelum mulai', '📱 Tonton video form untuk gerakan baru', '📝 Catat beban tiap set untuk progressive overload'].map(t => (
-              <div key={t} style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, fontSize: 13, color: 'var(--text2)', marginBottom: 6 }}>{t}</div>
-            ))}
+            <div className="card-title">{t('workout.tipsTitle')}</div>
+            {/* Using arbitrary mapping since the array is in dictionaries.ts */}
+            {t('workout.tipsTitle') === 'Tips Sebelum Latihan' ? (
+                ['💧 Minum 1-2 gelas air sebelum mulai', '🔥 Warm up 5-10 menit sebelum mulai', '📱 Tonton video form untuk gerakan baru', '📝 Catat beban tiap set untuk progressive overload'].map(tps => (
+                  <div key={tps} style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, fontSize: 13, color: 'var(--text2)', marginBottom: 6 }}>{tps}</div>
+                ))
+            ) : (
+                ['💧 Drink 1-2 glasses of water before starting', '🔥 Warm up for 5-10 minutes', '📱 Watch form videos for new movements', '📝 Log weight per set for progressive overload'].map(tps => (
+                  <div key={tps} style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, fontSize: 13, color: 'var(--text2)', marginBottom: 6 }}>{tps}</div>
+                ))
+            )}
           </div>
         </div>
       </AppShell>
@@ -331,7 +340,7 @@ export default function WorkoutPage() {
                   color: timerRunning ? 'var(--red)' : 'var(--green)',
                   border: `1px solid ${timerRunning ? 'rgba(255,92,92,0.3)' : 'rgba(57,217,138,0.3)'}`,
                 }}>
-                {timerRunning ? '⏸ Pause' : '▶ Resume'}
+                {timerRunning ? t('workout.active.pause') : t('workout.active.resume')}
               </button>
               <button className="btn-icon btn-sm" style={{ padding: '4px 8px', fontSize: 11 }} onClick={resetTimer}>↺</button>
             </div>
@@ -341,7 +350,7 @@ export default function WorkoutPage() {
         {/* Rest Timer */}
         {restRunning && (
           <div style={{ marginBottom: 12, background: 'rgba(124,106,255,0.1)', border: '1px solid rgba(124,106,255,0.3)', borderRadius: 12, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 700 }}>⏱ Rest Timer</span>
+            <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 700 }}>{t('workout.active.restTimer')}</span>
             <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 22, fontWeight: 700, color: restTimer <= 10 ? 'var(--red)' : 'var(--accent)' }}>
               {formatDuration(restTimer)}
             </span>
@@ -358,7 +367,7 @@ export default function WorkoutPage() {
         {/* Progress bar */}
         <div className="card" style={{ marginBottom: 14, padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-            <span style={{ color: 'var(--text2)' }}>{completedSets}/{totalSets} set selesai</span>
+            <span style={{ color: 'var(--text2)' }}>{completedSets}/{totalSets} {t('workout.active.setCompleted')}</span>
             <span style={{ fontWeight: 700 }}>{progress}%</span>
           </div>
           <div className="progress-wrap" style={{ height: 8 }}>
@@ -379,7 +388,7 @@ export default function WorkoutPage() {
                       <span>{ex.muscleGroup}</span>
                       {prevEx && (
                         <div style={{ background: 'var(--bg2)', padding: '4px 8px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 10, width: 'fit-content' }}>
-                           <span style={{color: 'var(--accent)', fontWeight: 600}}>Terakhir ({prevEx.date}):</span> {prevEx.sets.filter(s => s.reps > 0 || s.weight > 0).map(s => `${s.weight}kg x ${s.reps}`).join(' · ')}
+                           <span style={{color: 'var(--accent)', fontWeight: 600}}>{t('workout.active.last')} ({prevEx.date}):</span> {prevEx.sets.filter(s => s.reps > 0 || s.weight > 0).map(s => `${s.weight}kg x ${s.reps}`).join(' · ')}
                         </div>
                       )}
                     </div>
@@ -389,7 +398,7 @@ export default function WorkoutPage() {
 
                 {/* Column headers */}
               <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 1fr 1fr 36px', gap: 6, fontSize: 10, color: 'var(--text3)', marginBottom: 6, padding: '0 2px' }}>
-                <span>#</span><span>Reps</span><span>Berat (kg)</span><span>Status</span><span></span>
+                <span>#</span><span>{t('workout.active.reps')}</span><span>{t('workout.active.weight')}</span><span>{t('workout.active.status')}</span><span></span>
               </div>
 
               {/* Sets */}
@@ -435,7 +444,7 @@ export default function WorkoutPage() {
               ))}
 
                 <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => addSet(ex.id)}>+ Set</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => addSet(ex.id)}>{t('workout.active.addSet')}</button>
                   <button className="btn btn-ghost btn-sm" style={{ fontSize: 11 }} onClick={() => startRest(90)}>⏱ Rest 90s</button>
                 </div>
               </div>
@@ -446,16 +455,16 @@ export default function WorkoutPage() {
         <button className="btn btn-ghost"
           style={{ width: '100%', marginBottom: 14, justifyContent: 'center' }}
           onClick={() => setShowAddEx(true)}>
-          + Tambah Latihan
+          {t('workout.active.addExercise')}
         </button>
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="btn btn-primary"
             style={{ flex: 1, justifyContent: 'center' }}
             onClick={finishWorkout}>
-            ✓ Selesai — {formatDuration(elapsed)}
+            {t('workout.active.finish')} — {formatDuration(elapsed)}
           </button>
-          <button className="btn btn-danger" onClick={cancelWorkout}>Batal</button>
+          <button className="btn btn-danger" onClick={cancelWorkout}>{t('common.cancel')}</button>
         </div>
       </div>
 
@@ -464,12 +473,12 @@ export default function WorkoutPage() {
         <div className="modal-overlay" onClick={() => setShowAddEx(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-title">
-              Tambah Latihan
+              {t('workout.addModal.title')}
               <button className="btn-icon" onClick={() => setShowAddEx(false)}>✕</button>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Grup Otot</label>
+              <label className="form-label">{t('workout.addModal.muscleGroup')}</label>
               <select className="input" value={newEx.muscleGroup}
                 onChange={e => setNewEx({ ...newEx, muscleGroup: e.target.value as MuscleGroup, name: '' })}>
                 {MUSCLE_GROUPS.map(mg => <option key={mg}>{mg}</option>)}
@@ -477,7 +486,7 @@ export default function WorkoutPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Pilih Latihan</label>
+              <label className="form-label">{t('workout.addModal.chooseExercise')}</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
                 {EXERCISE_PRESETS[newEx.muscleGroup].map(p => (
                   <button key={p} onClick={() => setNewEx({ ...newEx, name: p })}
@@ -491,15 +500,15 @@ export default function WorkoutPage() {
                   </button>
                 ))}
               </div>
-              <input className="input" placeholder="Atau ketik nama latihan sendiri..."
+              <input className="input" placeholder={t('workout.addModal.placeholder')}
                 value={newEx.name}
                 onChange={e => setNewEx({ ...newEx, name: e.target.value })} />
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button className="btn btn-primary" style={{ flex: 1 }}
-                onClick={addExercise} disabled={!newEx.name.trim()}>Tambah</button>
-              <button className="btn btn-ghost" onClick={() => setShowAddEx(false)}>Batal</button>
+                onClick={addExercise} disabled={!newEx.name.trim()}>{t('workout.addModal.add')}</button>
+              <button className="btn btn-ghost" onClick={() => setShowAddEx(false)}>{t('common.cancel')}</button>
             </div>
           </div>
         </div>

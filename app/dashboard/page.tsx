@@ -109,9 +109,9 @@ export default function DashboardPage() {
           <div style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600 }}>{greet()} 👋</div>
           <h1 className="page-title">{profile.name}</h1>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'var(--text2)' }}>{thisWeekSessions.length}/{profile.gymDaysPerWeek} sesi minggu ini</span>
+            <span style={{ fontSize: 13, color: 'var(--text2)' }}>{thisWeekSessions.length}/{profile.gymDaysPerWeek} {t('dashboard.sessionsThisWeek')}</span>
             {thisWeekSessions.length >= profile.gymDaysPerWeek && (
-              <span style={{ fontSize: 12, background: 'rgba(57,217,138,0.14)', color: 'var(--green)', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>🎯 Target tercapai!</span>
+              <span style={{ fontSize: 12, background: 'rgba(57,217,138,0.14)', color: 'var(--green)', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>{t('dashboard.targetReached')}</span>
             )}
           </div>
         </div>
@@ -119,10 +119,10 @@ export default function DashboardPage() {
         {/* Stats */}
         <div className="grid-4" style={{ marginBottom: 16 }}>
           {[
-            { label: 'Sesi Minggu Ini', val: thisWeekSessions.length, unit: `/ ${profile.gymDaysPerWeek}`, color: 'var(--accent)' },
-            { label: 'Volume Minggu', val: (totalVolume / 1000).toFixed(1), unit: 'ton', color: 'var(--orange)' },
-            { label: 'Kalori Hari Ini', val: Math.round(todayCalories), unit: 'kkal', color: 'var(--yellow)' },
-            { label: 'Protein Hari Ini', val: Math.round(todayProtein), unit: 'g', color: 'var(--green)' },
+            { label: t('dashboard.stats.sessionThisWeek'), val: thisWeekSessions.length, unit: `/ ${profile.gymDaysPerWeek}`, color: 'var(--accent)' },
+            { label: t('dashboard.stats.volumeWeek'), val: (totalVolume / 1000).toFixed(1), unit: 'ton', color: 'var(--orange)' },
+            { label: t('dashboard.stats.calToday'), val: Math.round(todayCalories), unit: 'kkal', color: 'var(--yellow)' },
+            { label: t('dashboard.stats.proteinToday'), val: Math.round(todayProtein), unit: 'g', color: 'var(--green)' },
           ].map(s => (
             <div key={s.label} className="stat-card">
               <div className="stat-label">{s.label}</div>
@@ -135,8 +135,8 @@ export default function DashboardPage() {
         {/* Progress */}
         <div className="grid-2" style={{ marginBottom: 16 }}>
           {[
-            { label: 'Target Kalori', pct: calPct, val: Math.round(todayCalories), target: profile.targetCalories, unit: 'kkal', color: 'var(--yellow), var(--orange)' },
-            { label: 'Target Protein', pct: protPct, val: Math.round(todayProtein), target: profile.targetProtein, unit: 'g', color: 'var(--green), #00d2ff' },
+            { label: t('dashboard.progress.targetCal'), pct: calPct, val: Math.round(todayCalories), target: profile.targetCalories, unit: 'kkal', color: 'var(--yellow), var(--orange)' },
+            { label: t('dashboard.progress.targetProtein'), pct: protPct, val: Math.round(todayProtein), target: profile.targetProtein, unit: 'g', color: 'var(--green), #00d2ff' },
           ].map(p => (
             <div key={p.label} className="card">
               <div className="card-title">{p.label}</div>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
         {/* Charts */}
         <div className="grid-2" style={{ marginBottom: 16 }}>
           <div className="card">
-            <div className="card-title">Volume Latihan 7 Hari</div>
+            <div className="card-title">{t('dashboard.charts.volume7Days')}</div>
             <ResponsiveContainer width="100%" height={140}>
               <AreaChart data={chartData} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
                 <defs><linearGradient id="vg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--accent)" stopOpacity={0.35}/><stop offset="95%" stopColor="var(--accent)" stopOpacity={0}/></linearGradient></defs>
@@ -167,7 +167,7 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </div>
           <div className="card">
-            <div className="card-title">Kalori 7 Hari</div>
+            <div className="card-title">{t('dashboard.charts.cal7Days')}</div>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={chartData} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
                 <XAxis dataKey="day" tick={{ fill: 'var(--text3)', fontSize: 11 }} axisLine={false} tickLine={false}/>
@@ -187,17 +187,17 @@ export default function DashboardPage() {
           <div className="card" style={{ background: 'linear-gradient(135deg,#16163a,var(--bg2))', border: '1px solid rgba(124,106,255,0.3)', display: 'flex', flexDirection: 'column', minHeight: 320 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div>
-                <div className="card-title" style={{ marginBottom: 2 }}>🤖 GymBot AI</div>
-                <div style={{ fontSize: 12, color: 'var(--text2)' }}>Personal trainer AI kamu</div>
+                <div className="card-title" style={{ marginBottom: 2 }}>{t('dashboard.chatbot.title')}</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)' }}>{t('dashboard.chatbot.subtitle')}</div>
               </div>
-              <button className="btn btn-primary btn-sm" onClick={() => setChatOpen(true)}>Buka Chat</button>
+              <button className="btn btn-primary btn-sm" onClick={() => setChatOpen(true)}>{t('dashboard.chatbot.openChat')}</button>
             </div>
             {messages.length === 0 ? (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <div style={{ fontSize: 36 }}>🏋️</div>
-                <div style={{ fontSize: 13, color: 'var(--text2)', textAlign: 'center' }}>Tanya apapun seputar gym, nutrisi, dan program latihan kamu!</div>
+                <div style={{ fontSize: 13, color: 'var(--text2)', textAlign: 'center' }}>{t('dashboard.chatbot.welcome')}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, justifyContent: 'center' }}>
-                  {['Apa itu progressive overload?', 'Berapa protein idealku?', 'Tips push day'].map(q => (
+                  {[t('dashboard.chatbot.q1'), t('dashboard.chatbot.q2'), t('dashboard.chatbot.q3')].map(q => (
                     <button key={q} onClick={() => { setChatOpen(true); setInput(q); }}
                       style={{ padding: '5px 10px', borderRadius: 8, fontSize: 11, background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text2)', cursor: 'pointer' }}>
                       {q}
@@ -219,13 +219,13 @@ export default function DashboardPage() {
           {/* Recent Sessions */}
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div className="card-title" style={{ marginBottom: 0 }}>Sesi Terakhir</div>
-              <Link href="/history" className="btn btn-ghost btn-sm">Semua</Link>
+              <div className="card-title" style={{ marginBottom: 0 }}>{t('dashboard.recentSessions.title')}</div>
+              <Link href="/history" className="btn btn-ghost btn-sm">{t('dashboard.recentSessions.all')}</Link>
             </div>
             {recentSessions.length === 0 ? (
               <div className="empty-state" style={{ padding: '20px 0' }}>
                 <div className="empty-icon">🏋️</div>
-                <div className="empty-sub">Belum ada sesi</div>
+                <div className="empty-sub">{t('dashboard.recentSessions.empty')}</div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -248,12 +248,12 @@ export default function DashboardPage() {
 
         {/* Quick actions */}
         <div className="card">
-          <div className="card-title">Quick Action</div>
+          <div className="card-title">{t('dashboard.quickAction.title')}</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link href="/workout" className="btn btn-primary">🏋️ Mulai Workout</Link>
-            <Link href="/nutrition" className="btn btn-ghost">🍽️ Catat Makan</Link>
-            <Link href="/log" className="btn btn-ghost">📋 Log</Link>
-            <Link href="/history" className="btn btn-ghost">📈 Statistik</Link>
+            <Link href="/workout" className="btn btn-primary">{t('dashboard.quickAction.startWorkout')}</Link>
+            <Link href="/nutrition" className="btn btn-ghost">{t('dashboard.quickAction.logMeal')}</Link>
+            <Link href="/log" className="btn btn-ghost">{t('dashboard.quickAction.log')}</Link>
+            <Link href="/history" className="btn btn-ghost">{t('dashboard.quickAction.stats')}</Link>
           </div>
         </div>
       </div>
@@ -263,13 +263,13 @@ export default function DashboardPage() {
         <div className="modal-overlay" onClick={() => setChatOpen(false)}>
           <div className="modal" style={{ maxWidth: 560, height: '80vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
             <div className="modal-title">
-              🤖 GymBot AI
+              {t('dashboard.chatbot.title')}
               <button className="btn-icon" onClick={() => setChatOpen(false)}>✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16, paddingRight: 4 }}>
               {messages.length === 0 && (
                 <div className="chat-bubble-bot">
-                  Halo! Saya GymBot, personal trainer AI kamu 💪 Tanya apa saja seputar gym, latihan, atau nutrisi!
+                  {t('dashboard.chatbot.greeting')}
                 </div>
               )}
               {messages.map((m, i) => (
@@ -277,15 +277,15 @@ export default function DashboardPage() {
                   {m.content}
                 </div>
               ))}
-              {loading && <div className="chat-bubble-bot">⏳ Sedang mengetik...</div>}
+              {loading && <div className="chat-bubble-bot">{t('dashboard.chatbot.typing')}</div>}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
-                className="input" placeholder="Tanya seputar gym..." value={input}
+                className="input" placeholder={t('dashboard.chatbot.placeholder')} value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendChat()}
               />
-              <button className="btn btn-primary" onClick={sendChat} disabled={loading || !input.trim()}>Kirim</button>
+              <button className="btn btn-primary" onClick={sendChat} disabled={loading || !input.trim()}>{t('dashboard.chatbot.send')}</button>
             </div>
           </div>
         </div>

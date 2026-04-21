@@ -3,12 +3,14 @@ import { useEffect, useState, useMemo } from 'react';
 import { storage } from '@/lib/storage';
 import { WorkoutSession, MealEntry, FoodItem, UserProfile } from '@/types';
 import AppShell from '@/components/AppShell';
+import { useLanguage } from '@/components/LanguageProvider';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart, Pie,
 } from 'recharts';
 
 export default function HistoryPage() {
+  const { t } = useLanguage();
   const [profile, setProfile]   = useState<UserProfile | null>(null);
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [meals, setMeals]       = useState<MealEntry[]>([]);
@@ -66,8 +68,8 @@ export default function HistoryPage() {
   return (
     <AppShell>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <h1 className="page-title">Statistik & Riwayat</h1>
-        <p className="page-sub">Progress latihan dan nutrisi kamu</p>
+        <h1 className="page-title">{t('history.title')}</h1>
+        <p className="page-sub">Progress tracking</p>
 
         {/* All-time stats */}
         <div className="grid-4" style={{ marginBottom: 20 }}>
