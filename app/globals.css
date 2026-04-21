@@ -194,12 +194,11 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
   .desktop-nav { display: none; }
   .header-name { display: none; }
   .mobile-nav { display: flex; }
-  .main-content { padding: 32px 16px; }
+  .main-content { padding: 32px 16px; margin-top: 60px; margin-bottom: 100px; }
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .page-title { font-size: 26px; }
   .stat-val { font-size: 26px; }
   .header { height: 60px; }
-  .main-content { margin-top: 60px; }
 }
 
 @media(max-width:480px) {

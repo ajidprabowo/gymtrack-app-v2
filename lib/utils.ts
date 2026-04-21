@@ -15,7 +15,23 @@ export function formatDateShort(dateStr: string): string {
 }
 
 export function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getCurrentWeekStartStr(): string {
+  const d = new Date();
+  const day = d.getDay();
+  // Adjust to make Monday the start of the week (day 1)
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const date = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${date}`;
 }
 
 export function formatDuration(seconds: number): string {

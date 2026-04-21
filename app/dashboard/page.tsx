@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { storage } from '@/lib/storage';
 import { WorkoutSession, MealEntry, FoodItem, UserProfile, ChatMessage } from '@/types';
-import { todayStr, formatDateShort, getBadgeClass } from '@/lib/utils';
+import { todayStr, formatDateShort, getBadgeClass, getCurrentWeekStartStr } from '@/lib/utils';
 import AppShell from '@/components/AppShell';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import Link from 'next/link';
@@ -29,8 +29,8 @@ export default function DashboardPage() {
   const today = todayStr();
 
   const thisWeekSessions = useMemo(() => {
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-    return sessions.filter(s => s.date >= weekAgo && s.completed);
+    const startOfWeek = getCurrentWeekStartStr();
+    return sessions.filter(s => s.date >= startOfWeek && s.completed);
   }, [sessions]);
 
   const todayMeals = useMemo(() => meals.filter(m => m.date === today), [meals, today]);
