@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 // Use stable flash model — preview models are unreliable for structured output
 const MODELS = [
   'gemini-3-flash-preview',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
 ];
 
 function extractJSON(text: string): Record<string, unknown> | null {
@@ -12,12 +10,12 @@ function extractJSON(text: string): Record<string, unknown> | null {
   // 1. Strip markdown fences
   let cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
   // 2. Direct parse
-  try { return JSON.parse(cleaned); } catch {}
+  try { return JSON.parse(cleaned); } catch { }
   // 3. Find first complete {...} block
   const start = cleaned.indexOf('{');
-  const end   = cleaned.lastIndexOf('}');
+  const end = cleaned.lastIndexOf('}');
   if (start !== -1 && end !== -1 && end > start) {
-    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch {}
+    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch { }
   }
   return null;
 }
@@ -31,7 +29,8 @@ async function callGemini(apiKey: string, model: string, prompt: string) {
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
-          maxOutputTokens: 200,
+          responseMimeType: 'application/json',
+          maxOutputTokens: 800,
           temperature: 0.0,   // fully deterministic
           topP: 0.1,
         },
@@ -61,8 +60,8 @@ Numbers must be numeric (not strings). No markdown, no explanation, no extra tex
 
   for (const model of MODELS) {
     try {
-      const res  = await callGemini(apiKey, model, prompt);
-      const raw  = await res.json();
+      const res = await callGemini(apiKey, model, prompt);
+      const raw = await res.json();
 
       if (res.status === 503 || res.status === 429) {
         lastError = `Model ${model} overloaded (${res.status}), trying next...`;
@@ -89,7 +88,7 @@ Numbers must be numeric (not strings). No markdown, no explanation, no extra tex
 
       // Validate & coerce
       const required = ['name', 'unit', 'caloriesPer', 'proteinPer', 'carbsPer', 'fatPer'];
-      const missing  = required.filter(k => parsed[k] === undefined || parsed[k] === null);
+      const missing = required.filter(k => parsed[k] === undefined || parsed[k] === null);
       if (missing.length > 0) {
         lastError = `Missing fields: ${missing.join(', ')} in: ${JSON.stringify(parsed)}`;
         console.error(lastError);

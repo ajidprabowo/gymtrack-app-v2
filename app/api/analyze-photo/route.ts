@@ -2,18 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const MODELS = [
   'gemini-3-flash-preview',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
 ];
 
 function extractJSON(text: string): Record<string, unknown> | null {
   if (!text) return null;
   let cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-  try { return JSON.parse(cleaned); } catch {}
+  try { return JSON.parse(cleaned); } catch { }
   const start = cleaned.indexOf('{');
-  const end   = cleaned.lastIndexOf('}');
+  const end = cleaned.lastIndexOf('}');
   if (start !== -1 && end !== -1 && end > start) {
-    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch {}
+    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch { }
   }
   return null;
 }
@@ -39,7 +37,7 @@ Numbers must be numeric. Estimate nutrition for the visible portion size. No mar
             { text: prompt },
           ],
         }],
-        generationConfig: { maxOutputTokens: 300, temperature: 0.1 },
+        generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 800, temperature: 0.1 },
       }),
     }
   );
@@ -83,7 +81,7 @@ export async function POST(req: NextRequest) {
       }
 
       const required = ['name', 'unit', 'caloriesPer', 'proteinPer', 'carbsPer', 'fatPer'];
-      const missing  = required.filter(k => parsed[k] === undefined || parsed[k] === null);
+      const missing = required.filter(k => parsed[k] === undefined || parsed[k] === null);
       if (missing.length > 0) {
         lastError = `Missing fields: ${missing.join(', ')}`;
         continue;
