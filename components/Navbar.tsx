@@ -12,7 +12,6 @@ export default function Navbar({ name }: { name: string }) {
   const NAV = [
     { href: '/dashboard', icon: '⚡', label: t('navbar.dashboard') },
     { href: '/workout',   icon: '🏋️', label: t('navbar.workout') },
-    { href: '/log',       icon: '📋', label: t('navbar.log') },
     { href: '/nutrition', icon: '🍽️', label: t('navbar.nutrition') },
     { href: '/history',   icon: '📈', label: t('navbar.history') },
     { href: '/profile',   icon: '👤', label: t('navbar.profile') },

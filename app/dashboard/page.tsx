@@ -252,7 +252,7 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Link href="/workout" className="btn btn-primary">{t('dashboard.quickAction.startWorkout')}</Link>
             <Link href="/nutrition" className="btn btn-ghost">{t('dashboard.quickAction.logMeal')}</Link>
-            <Link href="/log" className="btn btn-ghost">{t('dashboard.quickAction.log')}</Link>
+            <Link href="/history" className="btn btn-ghost">{t('dashboard.quickAction.log')}</Link>
             <Link href="/history" className="btn btn-ghost">{t('dashboard.quickAction.stats')}</Link>
           </div>
         </div>
