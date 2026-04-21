@@ -6,8 +6,10 @@ import { todayStr, formatDateShort, getBadgeClass } from '@/lib/utils';
 import AppShell from '@/components/AppShell';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import Link from 'next/link';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function DashboardPage() {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [meals, setMeals] = useState<MealEntry[]>([]);
@@ -95,9 +97,9 @@ export default function DashboardPage() {
     setLoading(false);
   }
 
-  if (!profile) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading...</div></AppShell>;
+  if (!profile) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>{t('dashboard.loading')}</div></AppShell>;
 
-  const greet = () => { const h = new Date().getHours(); return h < 12 ? 'Selamat Pagi' : h < 18 ? 'Selamat Siang' : 'Selamat Malam'; };
+  const greet = () => { const h = new Date().getHours(); return h < 12 ? t('dashboard.morning') : h < 18 ? t('dashboard.afternoon') : t('dashboard.evening'); };
 
   return (
     <AppShell>

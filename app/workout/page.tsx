@@ -63,26 +63,63 @@ export default function WorkoutPage() {
 
   useEffect(() => {
     setSessions(storage.getSessions());
+
+    const savedActive = storage.getActiveWorkout();
+    if (savedActive) setActive(savedActive);
+
+    const savedTimer = storage.getTimerState();
+    if (savedTimer) {
+      if (savedTimer.running) {
+        setTimerRunning(true);
+        startTimeRef.current = savedTimer.startTime;
+        const e = Math.floor((Date.now() - savedTimer.startTime) / 1000);
+        setElapsed(e);
+        intervalRef.current = setInterval(() => {
+          setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+        }, 1000);
+      } else {
+        setElapsed(savedTimer.elapsed);
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    if (active) {
+      storage.saveActiveWorkout(active);
+    } else {
+      storage.clearActiveWorkout();
+    }
+  }, [active]);
+
+  const syncTimerState = (running: boolean, start: number, currentElapsed: number) => {
+    storage.saveTimerState({ running, startTime: start, elapsed: currentElapsed });
+  };
 
   // ── Timer helpers ──────────────────────────────────────────────────────────
   const startTimer = useCallback(() => {
     startTimeRef.current = Date.now() - elapsed * 1000;
+    if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
     setTimerRunning(true);
+    syncTimerState(true, startTimeRef.current, elapsed);
   }, [elapsed]);
 
   const pauseTimer = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     setTimerRunning(false);
+    setElapsed(prev => {
+      syncTimerState(false, startTimeRef.current, prev);
+      return prev;
+    });
   }, []);
 
   const resetTimer = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     setElapsed(0);
     setTimerRunning(false);
+    storage.clearTimerState();
   }, []);
 
   const startRest = (seconds: number) => {
@@ -116,10 +153,12 @@ export default function WorkoutPage() {
     setElapsed(0);
     // Start timer automatically
     startTimeRef.current = Date.now();
+    if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
     setTimerRunning(true);
+    syncTimerState(true, startTimeRef.current, 0);
   }
 
   function addSet(exId: string) {
@@ -215,6 +254,17 @@ export default function WorkoutPage() {
       resetTimer();
     }
   }
+
+  // ── History helper ─────────────────────────────────────────────────────────
+  const getPrevExercise = useCallback((name: string) => {
+    const sorted = [...sessions].sort((a,b) => b.date.localeCompare(a.date));
+    for (const session of sorted) {
+      if (session.id === active?.id) continue;
+      const ex = session.exercises.find(e => e.name.toLowerCase() === name.toLowerCase());
+      if (ex && ex.sets.length > 0) return { date: session.date, sets: ex.sets };
+    }
+    return null;
+  }, [sessions, active]);
 
   // ── No active workout ──────────────────────────────────────────────────────
   if (!active) {
@@ -318,17 +368,26 @@ export default function WorkoutPage() {
 
         {/* Exercise cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-          {active.exercises.map(ex => (
-            <div key={ex.id} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontFamily: 'var(--font-montserrat,Montserrat,sans-serif)', fontSize: 15, fontWeight: 700 }}>{ex.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{ex.muscleGroup}</div>
+          {active.exercises.map(ex => {
+            const prevEx = getPrevExercise(ex.name);
+            return (
+              <div key={ex.id} className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-montserrat,Montserrat,sans-serif)', fontSize: 15, fontWeight: 700 }}>{ex.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span>{ex.muscleGroup}</span>
+                      {prevEx && (
+                        <div style={{ background: 'var(--bg2)', padding: '4px 8px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 10, width: 'fit-content' }}>
+                           <span style={{color: 'var(--accent)', fontWeight: 600}}>Terakhir ({prevEx.date}):</span> {prevEx.sets.filter(s => s.reps > 0 || s.weight > 0).map(s => `${s.weight}kg x ${s.reps}`).join(' · ')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <button className="btn btn-danger btn-sm" onClick={() => removeExercise(ex.id)}>✕</button>
                 </div>
-                <button className="btn btn-danger btn-sm" onClick={() => removeExercise(ex.id)}>✕</button>
-              </div>
 
-              {/* Column headers */}
+                {/* Column headers */}
               <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 1fr 1fr 36px', gap: 6, fontSize: 10, color: 'var(--text3)', marginBottom: 6, padding: '0 2px' }}>
                 <span>#</span><span>Reps</span><span>Berat (kg)</span><span>Status</span><span></span>
               </div>
@@ -375,12 +434,13 @@ export default function WorkoutPage() {
                 </div>
               ))}
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => addSet(ex.id)}>+ Set</button>
-                <button className="btn btn-ghost btn-sm" style={{ fontSize: 11 }} onClick={() => startRest(90)}>⏱ Rest 90s</button>
+                <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => addSet(ex.id)}>+ Set</button>
+                  <button className="btn btn-ghost btn-sm" style={{ fontSize: 11 }} onClick={() => startRest(90)}>⏱ Rest 90s</button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <button className="btn btn-ghost"

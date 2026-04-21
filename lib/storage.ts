@@ -77,4 +77,12 @@ export const storage = {
     return merged;
   },
   saveFoods(f: FoodItem[]) { safeSet(KEYS.foods, f); },
+
+  getActiveWorkout(): any { return safeGet<any>('gtp_active_workout', null); },
+  saveActiveWorkout(w: any) { safeSet('gtp_active_workout', w); },
+  clearActiveWorkout() { localStorage.removeItem('gtp_active_workout'); },
+
+  getTimerState(): any { return safeGet<any>('gtp_timer_state', null); },
+  saveTimerState(t: any) { safeSet('gtp_timer_state', t); },
+  clearTimerState() { localStorage.removeItem('gtp_timer_state'); },
 };

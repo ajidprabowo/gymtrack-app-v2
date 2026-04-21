@@ -2,19 +2,25 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from './ThemeProvider';
-
-const NAV = [
-  { href: '/dashboard', icon: '⚡', label: 'Dashboard' },
-  { href: '/workout',   icon: '🏋️', label: 'Workout' },
-  { href: '/log',       icon: '📋', label: 'Log' },
-  { href: '/nutrition', icon: '🍽️', label: 'Nutrisi' },
-  { href: '/history',   icon: '📈', label: 'Riwayat' },
-  { href: '/profile',   icon: '👤', label: 'Profil' },
-];
+import { useLanguage } from './LanguageProvider';
 
 export default function Navbar({ name }: { name: string }) {
   const path = usePathname();
   const { theme, toggle } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
+
+  const NAV = [
+    { href: '/dashboard', icon: '⚡', label: t('navbar.dashboard') },
+    { href: '/workout',   icon: '🏋️', label: t('navbar.workout') },
+    { href: '/log',       icon: '📋', label: t('navbar.log') },
+    { href: '/nutrition', icon: '🍽️', label: t('navbar.nutrition') },
+    { href: '/history',   icon: '📈', label: t('navbar.history') },
+    { href: '/profile',   icon: '👤', label: t('navbar.profile') },
+  ];
+
+  const handleLanguageToggle = () => {
+    setLanguage(language === 'id' ? 'en' : 'id');
+  };
 
   return (
     <>
@@ -31,7 +37,10 @@ export default function Navbar({ name }: { name: string }) {
             ))}
           </nav>
           <div className="header-right">
-            <button className="theme-toggle" onClick={toggle} title="Toggle theme">
+            <button className="theme-toggle" onClick={handleLanguageToggle} title="Change language" style={{fontSize: '14px', fontWeight: 'bold'}}>
+              {language.toUpperCase()}
+            </button>
+            <button className="theme-toggle" onClick={toggle} title={t('theme.toggle')}>
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
             <div className="avatar">{name.charAt(0).toUpperCase()}</div>
