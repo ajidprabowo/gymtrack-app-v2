@@ -74,10 +74,10 @@ export default function HistoryPage() {
         {/* All-time stats */}
         <div className="grid-4" style={{ marginBottom: 20 }}>
           {[
-            { label: 'Total Sesi',   val: completed.length,              unit: 'sesi',     color: 'var(--accent)' },
-            { label: 'Total Volume', val: (totalVol/1000).toFixed(1),    unit: 'ton',      color: 'var(--orange)' },
-            { label: 'Total Latihan',val: totalEx,                       unit: 'exercise', color: 'var(--yellow)' },
-            { label: 'Rata-rata Dur',val: avgDur,                        unit: 'menit',    color: 'var(--green)' },
+            { label: t('history.stats.totalSessions'),   val: completed.length,              unit: t('history.stats.sessionsUnit'),     color: 'var(--accent)' },
+            { label: t('history.stats.totalVolume'), val: (totalVol/1000).toFixed(1),    unit: t('history.stats.tonUnit'),      color: 'var(--orange)' },
+            { label: t('history.stats.totalExercise'),val: totalEx,                       unit: t('history.stats.exerciseUnit'), color: 'var(--yellow)' },
+            { label: t('history.stats.avgDuration'),val: avgDur,                        unit: t('history.stats.minuteUnit'),    color: 'var(--green)' },
           ].map(({ label, val, unit, color }) => (
             <div key={label} className="stat-card" style={{ borderTop: `3px solid ${color}` }}>
               <div className="stat-label">{label}</div>
@@ -95,14 +95,14 @@ export default function HistoryPage() {
                 background: range === r ? 'var(--accent)' : 'var(--bg2)',
                 outline: range === r ? 'none' : '1px solid var(--border)',
                 color: range === r ? '#fff' : 'var(--text2)' }}>
-              {r === 7 ? '7 Hari' : '30 Hari'}
+              {r === 7 ? t('history.filters.sevenDays') : t('history.filters.thirtyDays')}
             </button>
           ))}
         </div>
 
         {/* Volume trend */}
         <div className="card" style={{ marginBottom: 12 }}>
-          <div className="card-title">Volume Latihan</div>
+          <div className="card-title">{t('history.charts.volChart')}</div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={trend} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
               <defs>
@@ -122,7 +122,7 @@ export default function HistoryPage() {
         <div className="grid-2" style={{ marginBottom: 12 }}>
           {/* Calorie bar */}
           <div className="card">
-            <div className="card-title">Kalori Harian</div>
+            <div className="card-title">{t('history.charts.calChart')}</div>
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={trend} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
                 <XAxis dataKey="date" tick={{ fill: 'var(--text3)', fontSize: 10 }} axisLine={false} tickLine={false}/>
@@ -137,7 +137,7 @@ export default function HistoryPage() {
 
           {/* Protein bar */}
           <div className="card">
-            <div className="card-title">Protein Harian</div>
+            <div className="card-title">{t('history.charts.proChart')}</div>
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={trend} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
                 <XAxis dataKey="date" tick={{ fill: 'var(--text3)', fontSize: 10 }} axisLine={false} tickLine={false}/>
@@ -154,7 +154,7 @@ export default function HistoryPage() {
         <div className="grid-2">
           {/* Muscle breakdown */}
           <div className="card">
-            <div className="card-title">Distribusi Otot (Total Set)</div>
+            <div className="card-title">{t('history.charts.distChart')}</div>
             {muscleData.length === 0 ? (
               <div className="empty-state" style={{ padding: '20px 0' }}>
                 <div className="empty-sub">Belum ada data</div>
@@ -174,7 +174,7 @@ export default function HistoryPage() {
 
           {/* Workout type pie */}
           <div className="card">
-            <div className="card-title">Tipe Workout</div>
+            <div className="card-title">{t('history.charts.typeChart')}</div>
             {typeData.length === 0 ? (
               <div className="empty-state" style={{ padding: '20px 0' }}>
                 <div className="empty-sub">Belum ada data</div>

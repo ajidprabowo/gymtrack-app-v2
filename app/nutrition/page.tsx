@@ -574,23 +574,23 @@ export default function NutritionPage() {
             <p className="page-sub">{t('nutrition.target')} tracking</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button className="btn btn-ghost" onClick={() => setShowCalc(true)}>🔢 Kalkulator</button>
+            <button className="btn btn-ghost" onClick={() => setShowCalc(true)}>{t('nutrition.calc')}</button>
             <button className="btn btn-ghost" style={{ borderColor: 'rgba(57,217,138,0.4)', color: 'var(--green)' }} onClick={() => setShowCamera(true)}>
-              📷 Foto Makanan
+              {t('nutrition.photo')}
             </button>
             <button className="btn btn-ghost" style={{ borderColor: 'rgba(124,106,255,0.4)', color: 'var(--accent)' }} onClick={() => setShowAI(true)}>
-              ✨ Cari via AI
+              {t('nutrition.aiSearch')}
             </button>
             {customFoods.length > 0 && (
-              <button className="btn btn-ghost" onClick={() => setShowManage(true)}>⚙️ Kelola</button>
+              <button className="btn btn-ghost" onClick={() => setShowManage(true)}>{t('nutrition.manage')}</button>
             )}
-            <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Catat Makan</button>
+            <button className="btn btn-primary" onClick={() => setShowAdd(true)}>{t('nutrition.addMeal')}</button>
           </div>
         </div>
 
         {/* Date */}
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20 }}>
-          <label style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600 }}>Tanggal:</label>
+          <label style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600 }}>{t('nutrition.date')}</label>
           <input type="date" className="input" style={{ width: 'auto' }} value={selectedDate} max={todayStr()} onChange={e => setSelectedDate(e.target.value)} />
         </div>
 
@@ -637,8 +637,8 @@ export default function NutritionPage() {
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               {[
-                { label: 'Sisa Kalori',  val: Math.max(0, profile.targetCalories - dayTotals.calories), color: 'var(--yellow)', unit: 'kkal' },
-                { label: 'Sisa Protein', val: Math.max(0, profile.targetProtein - dayTotals.protein),   color: 'var(--green)',  unit: 'g' },
+                { label: t('nutrition.calorieLeft'),  val: Math.max(0, profile.targetCalories - dayTotals.calories), color: 'var(--yellow)', unit: 'kkal' },
+                { label: t('nutrition.proteinLeft'), val: Math.max(0, profile.targetProtein - dayTotals.protein),   color: 'var(--green)',  unit: 'g' },
               ].map(({ label, val, color, unit }) => (
                 <div key={label} style={{ textAlign: 'center', padding: '14px 18px', background: 'var(--bg3)', borderRadius: 12 }}>
                   <div style={{ fontSize: 24, fontWeight: 800, color, fontFamily: 'JetBrains Mono,monospace' }}>{Math.round(val)}</div>
@@ -683,12 +683,12 @@ export default function NutritionPage() {
         {dayMeals.length === 0 && (
           <div className="empty-state">
             <div className="empty-icon">🍽️</div>
-            <div className="empty-title">{t('nutrition.emptyMenu')}</div>
-            <div className="empty-sub">{t('nutrition.emptyMenu')}</div>
+            <div className="empty-title">{t('nutrition.emptyLogTitle')}</div>
+            <div className="empty-sub">{t('nutrition.emptyLogSub')}</div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Catat Makan</button>
-              <button className="btn btn-ghost" style={{ color: 'var(--green)', borderColor: 'rgba(57,217,138,0.4)' }} onClick={() => setShowCamera(true)}>📷 Foto Makanan</button>
-              <button className="btn btn-ghost" onClick={() => setShowAI(true)}>✨ Cari via AI</button>
+              <button className="btn btn-primary" onClick={() => setShowAdd(true)}>{t('nutrition.addMeal')}</button>
+              <button className="btn btn-ghost" style={{ color: 'var(--green)', borderColor: 'rgba(57,217,138,0.4)' }} onClick={() => setShowCamera(true)}>{t('nutrition.photo')}</button>
+              <button className="btn btn-ghost" onClick={() => setShowAI(true)}>{t('nutrition.aiSearch')}</button>
             </div>
           </div>
         )}

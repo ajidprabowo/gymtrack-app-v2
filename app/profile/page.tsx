@@ -4,8 +4,10 @@ import { storage } from '@/lib/storage';
 import { UserProfile } from '@/types';
 import AppShell from '@/components/AppShell';
 import { useTheme } from '@/components/ThemeProvider';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function ProfilePage() {
+  const { t, language } = useLanguage();
   const [form, setForm]   = useState<UserProfile | null>(null);
   const [saved, setSaved] = useState(false);
   const { theme, toggle } = useTheme();
@@ -37,17 +39,17 @@ export default function ProfilePage() {
   return (
     <AppShell>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <h1 className="page-title">Profil</h1>
-        <p className="page-sub">Pengaturan dan target personal kamu</p>
+        <h1 className="page-title">{t('profile.title')}</h1>
+        <p className="page-sub">{t('profile.subtitle')}</p>
 
         <div className="grid-2" style={{ marginBottom: 16 }}>
           {/* Profile form */}
           <div className="card">
-            <div className="card-title">Data Diri</div>
+            <div className="card-title">{t('profile.personalData')}</div>
             {[
-              { label: 'Nama', field: 'name', type: 'text' },
-              { label: 'Berat Badan (kg)', field: 'weightKg', type: 'number' },
-              { label: 'Tinggi Badan (cm)', field: 'heightCm', type: 'number' },
+              { label: t('profile.name'), field: 'name', type: 'text' },
+              { label: t('profile.weight'), field: 'weightKg', type: 'number' },
+              { label: t('profile.height'), field: 'heightCm', type: 'number' },
             ].map(({ label, field, type }) => (
               <div key={field} className="form-group">
                 <label className="form-label">{label}</label>
@@ -69,17 +71,17 @@ export default function ProfilePage() {
               </div>
             ))}
             <div className="form-group">
-              <label className="form-label">Goal</label>
+              <label className="form-label">{t('profile.goal')}</label>
               <select className="input" value={form.goal} onChange={e => setForm({ ...form, goal: e.target.value as UserProfile['goal'] })}>
-                <option value="Bulking">Bulking (nambah otot)</option>
-                <option value="Cutting">Cutting (turun lemak)</option>
+                <option value="Bulking">{language === 'en' ? 'Bulking (gain muscle)' : 'Bulking (nambah otot)'}</option>
+                <option value="Cutting">{language === 'en' ? 'Cutting (lose fat)' : 'Cutting (turun lemak)'}</option>
                 <option value="Maintenance">Maintenance</option>
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Hari Gym per Minggu</label>
+              <label className="form-label">{t('profile.gymDays')}</label>
               <select className="input" value={form.gymDaysPerWeek} onChange={e => setForm({ ...form, gymDaysPerWeek: parseInt(e.target.value) })}>
-                {[2,3,4,5,6].map(n => <option key={n} value={n}>{n} hari</option>)}
+                {[2,3,4,5,6].map(n => <option key={n} value={n}>{language === 'en' ? `${n} days` : `${n} hari`}</option>)}
               </select>
             </div>
           </div>
@@ -87,9 +89,9 @@ export default function ProfilePage() {
           <div>
             {/* Targets */}
             <div className="card" style={{ marginBottom: 12 }}>
-              <div className="card-title">Target Nutrisi</div>
+              <div className="card-title">{t('profile.nutritionTargets')}</div>
               <div className="form-group">
-                <label className="form-label">Target Kalori (kkal/hari)</label>
+                <label className="form-label">{t('profile.targetCal')}</label>
                 <input
                   type="text" inputMode="numeric" className="input"
                   value={form.targetCalories}
@@ -98,11 +100,11 @@ export default function ProfilePage() {
                   onFocus={e => e.target.select()}
                 />
                 <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
-                  Rekomendasi BB {form.weightKg}kg: <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{recCal} kkal</span>
+                  {t('profile.recBB')} {form.weightKg}kg: <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{recCal} kkal</span>
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Target Protein (g/hari)</label>
+                <label className="form-label">{t('profile.targetPro')}</label>
                 <input
                   type="text" inputMode="numeric" className="input"
                   value={form.targetProtein}
@@ -111,22 +113,22 @@ export default function ProfilePage() {
                   onFocus={e => e.target.select()}
                 />
                 <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
-                  Rekomendasi: <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{recProt}g</span> (2g × {form.weightKg}kg)
+                  {t('profile.recText')}: <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{recProt}g</span> (2g × {form.weightKg}kg)
                 </div>
               </div>
               <button className={`btn ${saved ? 'btn-success' : 'btn-primary'}`}
                 style={{ width: '100%', justifyContent: 'center' }} onClick={save}>
-                {saved ? '✓ Tersimpan!' : 'Simpan Perubahan'}
+                {saved ? t('profile.saved') : t('profile.saveChanges')}
               </button>
             </div>
 
             {/* Body stats */}
             <div className="card" style={{ marginBottom: 12 }}>
-              <div className="card-title">Statistik Tubuh</div>
+              <div className="card-title">{t('profile.bodyStats')}</div>
               {[
-                { label: 'BMI', val: `${bmi} (${bmiStatus})`, color: bmiColor },
-                { label: 'Berat Ideal', val: `${Math.round(18.5*Math.pow(form.heightCm/100,2))}–${Math.round(24.9*Math.pow(form.heightCm/100,2))} kg`, color: 'var(--green)' },
-                { label: 'Goal', val: form.goal, color: form.goal==='Bulking'?'var(--orange)':form.goal==='Cutting'?'var(--accent)':'var(--green)' },
+                { label: t('profile.bmi'), val: `${bmi} (${language === 'en'? (bmiStatus.replace('Kurus', 'Underweight').replace('Ideal', 'Ideal').replace('Overweight', 'Overweight').replace('Obese', 'Obese')) : bmiStatus})`, color: bmiColor },
+                { label: t('profile.idealWeight'), val: `${Math.round(18.5*Math.pow(form.heightCm/100,2))}–${Math.round(24.9*Math.pow(form.heightCm/100,2))} kg`, color: 'var(--green)' },
+                { label: t('profile.goal'), val: form.goal, color: form.goal==='Bulking'?'var(--orange)':form.goal==='Cutting'?'var(--accent)':'var(--green)' },
               ].map(({ label, val, color }) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, marginBottom: 6 }}>
                   <span style={{ fontSize: 13, color: 'var(--text2)' }}>{label}</span>
@@ -137,14 +139,14 @@ export default function ProfilePage() {
 
             {/* Theme toggle */}
             <div className="card">
-              <div className="card-title">Tampilan</div>
+              <div className="card-title">{t('profile.appearance')}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>Ganti tema tampilan</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{theme === 'dark' ? '🌌 Dark Mode' : '☀️ Light Mode'}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>{t('profile.themeSwitch')}</div>
                 </div>
                 <button className="btn btn-ghost" onClick={toggle}>
-                  {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+                  {theme === 'dark' ? '☀️ Light' : '🌌 Dark'}
                 </button>
               </div>
             </div>

@@ -5,8 +5,10 @@ import { WorkoutSession } from '@/types';
 import { formatDate, getBadgeClass } from '@/lib/utils';
 import AppShell from '@/components/AppShell';
 import Link from 'next/link';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function LogPage() {
+  const { t } = useLanguage();
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
@@ -23,7 +25,7 @@ export default function LogPage() {
     [sessions, filter]);
 
   function deleteSession(id: string) {
-    if (!window.confirm('Hapus sesi ini?')) return;
+    if (!window.confirm(t('logWorkout.deleteConfirm'))) return;
     const updated = sessions.filter(s => s.id !== id);
     setSessions(updated);
     storage.saveSessions(updated);
@@ -39,10 +41,10 @@ export default function LogPage() {
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 className="page-title">Log Workout</h1>
-            <p className="page-sub">Semua sesi latihan kamu</p>
+            <h1 className="page-title">{t('logWorkout.title')}</h1>
+            <p className="page-sub">{t('logWorkout.subtitle')}</p>
           </div>
-          <Link href="/workout" className="btn btn-primary">+ Workout Baru</Link>
+          <Link href="/workout" className="btn btn-primary">{t('logWorkout.newWorkout')}</Link>
         </div>
 
         {/* Filter */}
@@ -55,17 +57,17 @@ export default function LogPage() {
                 outline: filter === f ? 'none' : '1px solid var(--border)',
                 color: filter === f ? '#fff' : 'var(--text2)',
               }}>
-              {f === 'all' ? 'Semua' : f}
+              {f === 'all' ? t('logWorkout.filterAll') : f}
             </button>
           ))}
         </div>
 
         {sorted.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🏋️</div>
-            <div className="empty-title">Belum ada log workout</div>
-            <div className="empty-sub">Mulai workout pertama kamu!</div>
-            <Link href="/workout" className="btn btn-primary" style={{ marginTop: 16 }}>Mulai Workout</Link>
+            <div className="empty-icon">📁</div>
+            <div className="empty-title">{t('logWorkout.emptyTitle')}</div>
+            <div className="empty-sub">{t('logWorkout.emptySub')}</div>
+            <Link href="/workout" className="btn btn-primary" style={{ marginTop: 16 }}>{t('logWorkout.startFirst')}</Link>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -86,9 +88,9 @@ export default function LogPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
                     {[
-                      { val: s.exercises.length, lbl: 'latihan', color: 'var(--accent)' },
-                      { val: s.durationMinutes, lbl: 'menit', color: 'var(--orange)' },
-                      { val: (totalVol(s) / 1000).toFixed(1), lbl: 'ton', color: 'var(--yellow)' },
+                      { val: s.exercises.length, lbl: t('logWorkout.exerciseLabel'), color: 'var(--accent)' },
+                      { val: s.durationMinutes, lbl: t('logWorkout.minuteLabel'), color: 'var(--orange)' },
+                      { val: (totalVol(s) / 1000).toFixed(1), lbl: t('logWorkout.tonLabel'), color: 'var(--yellow)' },
                     ].map(({ val, lbl, color }) => (
                       <div key={lbl} style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 16, fontWeight: 800, fontFamily: 'JetBrains Mono,monospace', color }}>{val}</div>
@@ -129,7 +131,7 @@ export default function LogPage() {
                     )}
                     <button className="btn btn-danger btn-sm"
                       onClick={e => { e.stopPropagation(); deleteSession(s.id); }}>
-                      🗑 Hapus Sesi
+                      {t('logWorkout.deleteSession')}
                     </button>
                   </div>
                 )}
